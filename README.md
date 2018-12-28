@@ -17,6 +17,6 @@ allprojects {
 在module的build.gradle中
 
 ```groovy
-implementation 'com.github.lvrayman:CoolRecycleViewAdapter:0.0.1'
+implementation 'com.github.lvrayman:coolrecycleviewadapter:0.0.1'
 ```
 
