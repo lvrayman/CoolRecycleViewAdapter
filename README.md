@@ -1,0 +1,2 @@
+# CoolRecycleViewAdapter
+一个假装方便（偷懒）的适用于RecyclerView的Adapter
