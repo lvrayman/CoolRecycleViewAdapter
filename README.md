@@ -3,4 +3,20 @@
 
 ### 使用
 
- implementation 'com.github.lvrayman:CoolRecycleViewAdapter:0.0.1'
+在项目的build.gradle中加入
+
+```groovy
+allprojects {
+		repositories {
+			...
+			maven { url 'https://jitpack.io' }
+		}
+}
+```
+
+在module的build.gradle中
+
+```groovy
+implementation 'com.github.lvrayman:CoolRecycleViewAdapter:0.0.1'
+```
+
