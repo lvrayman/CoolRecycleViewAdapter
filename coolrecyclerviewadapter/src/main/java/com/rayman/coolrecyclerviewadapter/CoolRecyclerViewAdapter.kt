@@ -18,7 +18,7 @@ import android.widget.TextView
  * @version 2018/12/20
  */
 abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layoutResource: Int) :
-        RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private var loadState = LOADING_FINISH
     private var isLoadMore = false
     private var recyclerView: RecyclerView? = null
@@ -52,6 +52,8 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
             onCreateViewHolder(parent)
         }
     }
+
+    fun getData(): ArrayList<T> = data
 
     override fun getItemCount(): Int = data.size
 
@@ -144,10 +146,10 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
      * 添加修饰线，默认是水平方向的分割线
      */
     fun addItemDecoration(
-            itemDecoration: RecyclerView.ItemDecoration = DividerItemDecoration(
-                    context,
-                    DividerItemDecoration.VERTICAL
-            )
+        itemDecoration: RecyclerView.ItemDecoration = DividerItemDecoration(
+            context,
+            DividerItemDecoration.VERTICAL
+        )
     ) {
         recyclerView?.addItemDecoration(itemDecoration)
     }
