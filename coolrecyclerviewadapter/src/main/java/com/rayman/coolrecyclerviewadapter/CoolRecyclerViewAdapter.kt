@@ -12,19 +12,23 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.rayman.coolrecyclerviewadapter.defaultimplement.DefaultHeadViewHolder
+import com.rayman.coolrecyclerviewadapter.defaultimplement.DefaultLoadingViewHolder
+import com.rayman.coolrecyclerviewadapter.defaultimplement.DefaultViewHolder
 
 /**
  * @author 吕少锐 (lvshaorui@parkingwang.com)
  * @version 2018/12/20
  */
 abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layoutResource: Int) :
-    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+        RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private var loadState = LOADING_FINISH
     private var isLoadMore = false
     private var recyclerView: RecyclerView? = null
     private val data = arrayListOf<T>()
     var layoutManager: RecyclerView.LayoutManager? = null
     private var loadingViewHolder: RecyclerView.ViewHolder? = null
+    private var headViewHolder: RecyclerView.ViewHolder? = null
 
     fun onCreateViewHolder(parent: ViewGroup): DefaultViewHolder {
         val view = LayoutInflater.from(context).inflate(layoutResource, parent, false)
@@ -39,15 +43,25 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
         }
     }
 
+    fun setHeadViewHolder(viewHolder: RecyclerView.ViewHolder) {
+        if (viewHolder !is IHeadRefreshHolder) {
+            throw IllegalArgumentException("The view holder must implement interface IHeadViewHolder")
+        } else {
+            headViewHolder = viewHolder
+        }
+    }
+
     abstract fun onBindData(data: T, holder: DefaultViewHolder)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return if (viewType == TYPE_LOADING && isLoadMore) {
-            loadingViewHolder?.let {
-                return it
-            }
+            loadingViewHolder?.let { return it }
             val view = LayoutInflater.from(parent.context).inflate(R.layout.item_loading_more, parent, false)
             DefaultLoadingViewHolder(view)
+        } else if (viewType == TYPE_HEAD) {
+            headViewHolder?.let { return it }
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_head, parent, false)
+            DefaultHeadViewHolder(view)
         } else {
             onCreateViewHolder(parent)
         }
@@ -78,10 +92,10 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (position + 1 == itemCount) {
-            TYPE_LOADING
-        } else {
-            TYPE_ITEM
+        return when {
+            position == 0 -> TYPE_HEAD
+            position + 1 == itemCount -> TYPE_LOADING
+            else -> TYPE_ITEM
         }
     }
 
@@ -146,37 +160,12 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
      * 添加修饰线，默认是水平方向的分割线
      */
     fun addItemDecoration(
-        itemDecoration: RecyclerView.ItemDecoration = DividerItemDecoration(
-            context,
-            DividerItemDecoration.VERTICAL
-        )
+            itemDecoration: RecyclerView.ItemDecoration = DividerItemDecoration(
+                    context,
+                    DividerItemDecoration.VERTICAL
+            )
     ) {
         recyclerView?.addItemDecoration(itemDecoration)
-    }
-
-    /**
-     * 默认的加载提示
-     */
-    private inner class DefaultLoadingViewHolder(view: View) : RecyclerView.ViewHolder(view), ILoadingViewHolder {
-        private val ivLoading: ImageView by lazy { view.findViewById<ImageView>(R.id.iv_wait_progress) }
-        private val infoLoading: LinearLayout by lazy { view.findViewById<LinearLayout>(R.id.info_loading) }
-        private val infoNoMore: TextView by lazy { view.findViewById<TextView>(R.id.info_no_more) }
-
-        override fun onLoadStart() {
-            infoLoading.visibility = View.VISIBLE
-            infoNoMore.visibility = View.GONE
-            (ivLoading.background as AnimationDrawable).start()
-        }
-
-        override fun onLoadEnd() {
-            infoLoading.visibility = View.GONE
-            infoNoMore.visibility = View.VISIBLE
-        }
-
-        override fun onLoadFinish() {
-            infoLoading.visibility = View.GONE
-            infoNoMore.visibility = View.GONE
-        }
     }
 
     private abstract inner class LoadMoreScrollListener : RecyclerView.OnScrollListener() {
@@ -211,6 +200,7 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
     }
 
     companion object {
+        private const val TYPE_HEAD = 0
         private const val TYPE_ITEM = 1
         private const val TYPE_LOADING = 2
         const val LOADING_START = 1

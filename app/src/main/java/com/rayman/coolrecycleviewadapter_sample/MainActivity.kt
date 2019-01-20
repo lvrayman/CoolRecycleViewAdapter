@@ -7,7 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
 import com.rayman.coolrecyclerviewadapter.CoolRecyclerViewAdapter
-import com.rayman.coolrecyclerviewadapter.DefaultViewHolder
+import com.rayman.coolrecyclerviewadapter.defaultimplement.DefaultViewHolder
 import com.rayman.coolrecyclerviewadapter.ILoadingViewHolder
 import kotlinx.android.synthetic.main.activity_main.*
 

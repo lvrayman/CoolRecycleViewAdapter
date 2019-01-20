@@ -1,4 +1,4 @@
-package com.rayman.coolrecyclerviewadapter
+package com.rayman.coolrecyclerviewadapter.defaultimplement
 
 import android.support.v7.widget.RecyclerView
 import android.view.View
