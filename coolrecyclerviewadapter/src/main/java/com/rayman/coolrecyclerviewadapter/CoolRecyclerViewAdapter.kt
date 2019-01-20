@@ -84,6 +84,8 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
                     holder.onLoadEnd()
                 }
             }
+        } else if (holder is IHeadRefreshHolder) {
+
         } else {
             if (position < data.size) {
                 onBindData(data[position], holder as DefaultViewHolder)
