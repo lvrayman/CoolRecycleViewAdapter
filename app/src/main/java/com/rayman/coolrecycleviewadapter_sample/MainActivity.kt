@@ -15,7 +15,6 @@ class MainActivity : AppCompatActivity() {
     private var isAdd = false
 
     private val rvMain by lazy { rv_main }
-    //    private val data = arrayListOf("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n")
     private val data = arrayListOf(
             ShowData("1", "a"), ShowData("2", "a"), ShowData("3", "a"),
             ShowData("1", "a"), ShowData("2", "a"), ShowData("3", "a"),

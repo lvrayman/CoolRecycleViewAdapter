@@ -1,20 +1,18 @@
 package com.rayman.coolrecyclerviewadapter
 
+import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.drawable.AnimationDrawable
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
-import android.view.View
+import android.view.MotionEvent
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
 import com.rayman.coolrecyclerviewadapter.defaultimplement.DefaultHeadViewHolder
 import com.rayman.coolrecyclerviewadapter.defaultimplement.DefaultLoadingViewHolder
 import com.rayman.coolrecyclerviewadapter.defaultimplement.DefaultViewHolder
+import com.rayman.coolrecyclerviewadapter.view.RefreshHeadView
 
 /**
  * @author 吕少锐 (lvshaorui@parkingwang.com)
@@ -29,6 +27,8 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
     var layoutManager: RecyclerView.LayoutManager? = null
     private var loadingViewHolder: RecyclerView.ViewHolder? = null
     private var headViewHolder: RecyclerView.ViewHolder? = null
+    private var refreshHeadView: RefreshHeadView? = null
+    private var functionalHolderCount = 1
 
     fun onCreateViewHolder(parent: ViewGroup): DefaultViewHolder {
         val view = LayoutInflater.from(context).inflate(layoutResource, parent, false)
@@ -58,10 +58,11 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
             loadingViewHolder?.let { return it }
             val view = LayoutInflater.from(parent.context).inflate(R.layout.item_loading_more, parent, false)
             DefaultLoadingViewHolder(view)
-        } else if (viewType == TYPE_HEAD) {
+        } else if (viewType == TYPE_HEAD && isLoadMore) {
             headViewHolder?.let { return it }
-            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_head, parent, false)
-            DefaultHeadViewHolder(view)
+//            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_head, parent, false)
+//            DefaultHeadViewHolder(view).apply { headViewHolder = this }
+            DefaultHeadViewHolder(RefreshHeadView(context))
         } else {
             onCreateViewHolder(parent)
         }
@@ -69,7 +70,7 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
 
     fun getData(): ArrayList<T> = data
 
-    override fun getItemCount(): Int = data.size
+    override fun getItemCount(): Int = data.size + functionalHolderCount
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (isLoadMore && holder is ILoadingViewHolder) {
@@ -87,8 +88,8 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
         } else if (holder is IHeadRefreshHolder) {
 
         } else {
-            if (position < data.size) {
-                onBindData(data[position], holder as DefaultViewHolder)
+            if (0 < position && position < data.size + 1) {
+                onBindData(data[position - 1], holder as DefaultViewHolder)
             }
         }
     }
@@ -149,13 +150,27 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
         recyclerView.adapter = this
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     fun addLoadMoreListener(loadMore: () -> Unit) {
+        functionalHolderCount = 2
         isLoadMore = true
         recyclerView?.addOnScrollListener(object : LoadMoreScrollListener() {
             override fun loadMore() {
                 loadMore()
             }
         })
+        recyclerView?.setOnTouchListener { v, event ->
+            var startY = 0f
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                }
+                MotionEvent.ACTION_MOVE -> {
+                }
+                MotionEvent.ACTION_UP -> {
+                }
+            }
+            return@setOnTouchListener false
+        }
     }
 
     /**
