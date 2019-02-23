@@ -20,14 +20,15 @@ import com.rayman.coolrecyclerviewadapter.view.RefreshHeadView
  */
 abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layoutResource: Int) :
         RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    var layoutManager: RecyclerView.LayoutManager? = null
     private var loadState = LOADING_FINISH
     private var isLoadMore = false
     private var recyclerView: RecyclerView? = null
     private val data = arrayListOf<T>()
-    var layoutManager: RecyclerView.LayoutManager? = null
     private var loadingViewHolder: RecyclerView.ViewHolder? = null
-    private var headViewHolder: RecyclerView.ViewHolder? = null
+    private var headViewHolder: DefaultHeadViewHolder? = null
     private var refreshHeadView: RefreshHeadView? = null
+    private var refreshListener: (() -> Unit)? = null
     private var functionalHolderCount = 1
 
     fun onCreateViewHolder(parent: ViewGroup): DefaultViewHolder {
@@ -43,12 +44,8 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
         }
     }
 
-    fun setHeadViewHolder(viewHolder: RecyclerView.ViewHolder) {
-        if (viewHolder !is IHeadRefreshHolder) {
-            throw IllegalArgumentException("The view holder must implement interface IHeadViewHolder")
-        } else {
-            headViewHolder = viewHolder
-        }
+    fun setHeadViewHolder(viewHolder: DefaultHeadViewHolder) {
+        headViewHolder = viewHolder
     }
 
     abstract fun onBindData(data: T, holder: DefaultViewHolder)
@@ -57,12 +54,13 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
         return if (viewType == TYPE_LOADING && isLoadMore) {
             loadingViewHolder?.let { return it }
             val view = LayoutInflater.from(parent.context).inflate(R.layout.item_loading_more, parent, false)
-            DefaultLoadingViewHolder(view)
+            DefaultLoadingViewHolder(view).apply { loadingViewHolder = this }
         } else if (viewType == TYPE_HEAD && isLoadMore) {
             headViewHolder?.let { return it }
-//            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_head, parent, false)
-//            DefaultHeadViewHolder(view).apply { headViewHolder = this }
-            DefaultHeadViewHolder(RefreshHeadView(context))
+            DefaultHeadViewHolder(RefreshHeadView(context)).apply {
+                refreshListener?.let { setRefreshingListener(it) }
+                headViewHolder = this
+            }
         } else {
             onCreateViewHolder(parent)
         }
@@ -152,6 +150,8 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
 
     @SuppressLint("ClickableViewAccessibility")
     fun addLoadMoreListener(loadMore: () -> Unit) {
+        var startY = 0f
+        var offset = 0f
         functionalHolderCount = 2
         isLoadMore = true
         recyclerView?.addOnScrollListener(object : LoadMoreScrollListener() {
@@ -160,17 +160,39 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
             }
         })
         recyclerView?.setOnTouchListener { v, event ->
-            var startY = 0f
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
+                    startY = event.rawY
                 }
                 MotionEvent.ACTION_MOVE -> {
+                    offset = (event.rawY - startY) / 2
+                    if (offset > 0 && isLoadMore && isOnTop()) {
+                        if (headViewHolder is IHeadRefreshHolder) {
+                            (headViewHolder as IHeadRefreshHolder).onMove(offset)
+                        }
+                    }
                 }
                 MotionEvent.ACTION_UP -> {
+                    if (headViewHolder is IHeadRefreshHolder) {
+                        (headViewHolder as IHeadRefreshHolder).onRelease()
+                    }
                 }
             }
             return@setOnTouchListener false
         }
+    }
+
+    fun setOnRefreshingListener(listener: () -> Unit) {
+        refreshListener = listener
+        headViewHolder?.setRefreshingListener(listener)
+    }
+
+    fun refreshFinish() {
+        headViewHolder?.onReset()
+    }
+
+    private fun isOnTop(): Boolean {
+        return (recyclerView?.layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition() == 0
     }
 
     /**

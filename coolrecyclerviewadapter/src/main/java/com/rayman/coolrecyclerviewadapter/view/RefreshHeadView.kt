@@ -2,9 +2,10 @@ package com.rayman.coolrecyclerviewadapter.view
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.view.animation.Animation
 import android.view.animation.RotateAnimation
 import android.widget.LinearLayout
@@ -16,7 +17,8 @@ import com.rayman.coolrecyclerviewadapter.R
  * @version 2019/1/21
  */
 class RefreshHeadView : LinearLayout {
-    private lateinit var mContentLayout: LinearLayout
+    var maxHeight = 100f
+    lateinit var contentLayout: LinearLayout
     private lateinit var mTv: TextView
     private lateinit var mRotateUpAnim: RotateAnimation
     private lateinit var mRotateDownAnim: RotateAnimation
@@ -35,14 +37,19 @@ class RefreshHeadView : LinearLayout {
 
     private fun init(context: Context) {
         val layoutParams =
-            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         layoutParams.setMargins(0, 0, 0, 0)
         setLayoutParams(layoutParams)
         setPadding(0, 0, 0, 0)
-        mContentLayout = LayoutInflater.from(context).inflate(R.layout.view_head, null) as LinearLayout
-        addView(mContentLayout, LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0))
-
+        contentLayout = LayoutInflater.from(context).inflate(R.layout.view_head, null) as LinearLayout
+        addView(contentLayout, LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         mTv = findViewById(R.id.tv_head)
+        contentLayout.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                maxHeight = contentLayout.height.toFloat()
+                contentLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
+            }
+        })
 
         mRotateUpAnim = RotateAnimation(0f, -180f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
         mRotateUpAnim.duration = 200

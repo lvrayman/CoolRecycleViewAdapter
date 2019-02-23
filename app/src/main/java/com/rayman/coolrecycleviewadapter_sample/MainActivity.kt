@@ -2,7 +2,9 @@ package com.rayman.coolrecycleviewadapter_sample
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
@@ -57,6 +59,9 @@ class MainActivity : AppCompatActivity() {
         }
         val view = LayoutInflater.from(this).inflate(R.layout.loading_view, rvMain, false)
         adapter.setLoadingViewHolder(MyLoadingViewHolder(view))
+        adapter.setOnRefreshingListener {
+            Handler().postDelayed({ adapter.refreshFinish() }, 1000)
+        }
     }
 
     class MyLoadingViewHolder(view: View) : RecyclerView.ViewHolder(view), ILoadingViewHolder {
