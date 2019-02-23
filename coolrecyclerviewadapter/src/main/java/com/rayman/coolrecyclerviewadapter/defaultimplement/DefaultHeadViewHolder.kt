@@ -36,8 +36,10 @@ class DefaultHeadViewHolder(private val view: View) : RecyclerView.ViewHolder(vi
     }
 
     override fun onMove(offset: Float) {
+        Log.i("rayman", "offset:$offset")
         if (view is RefreshHeadView) {
             if (offset > view.maxHeight * 1.5) {
+                Log.i("rayman", "-----------------return-----------------")
                 return
             }
             this.offset = offset
@@ -49,32 +51,37 @@ class DefaultHeadViewHolder(private val view: View) : RecyclerView.ViewHolder(vi
 
     override fun onRelease() {
         if (view is RefreshHeadView) {
-            if (offset > view.maxHeight) {
-                val anim = ValueAnimator.ofFloat(offset, view.maxHeight)
-                anim.duration = 250
-                anim.addUpdateListener {
-                    val value = it.animatedValue as Float
-                    val lp = view.contentLayout.layoutParams
-                    lp.height = value.toInt()
-                    view.contentLayout.layoutParams = lp
+            val targetHeight = if (offset > view.maxHeight) {
+                view.maxHeight
+            } else {
+                0f
+            }
+            val anim = ValueAnimator.ofFloat(offset, targetHeight)
+            anim.duration = 250
+            anim.addUpdateListener {
+                val value = it.animatedValue as Float
+                val lp = view.contentLayout.layoutParams
+                lp.height = value.toInt()
+                view.contentLayout.layoutParams = lp
+            }
+            anim.addListener(object : Animator.AnimatorListener {
+                override fun onAnimationRepeat(animation: Animator?) {
                 }
-                anim.addListener(object : Animator.AnimatorListener {
-                    override fun onAnimationRepeat(animation: Animator?) {
-                    }
 
-                    override fun onAnimationEnd(animation: Animator?) {
-                        // 动画结束时开始刷新
+                override fun onAnimationEnd(animation: Animator?) {
+                    // 动画结束时开始刷新
+                    if (offset > view.maxHeight) {
                         onRefreshingListener?.invoke()
                     }
+                }
 
-                    override fun onAnimationCancel(animation: Animator?) {
-                    }
+                override fun onAnimationCancel(animation: Animator?) {
+                }
 
-                    override fun onAnimationStart(animation: Animator?) {
-                    }
-                })
-                anim.start()
-            }
+                override fun onAnimationStart(animation: Animator?) {
+                }
+            })
+            anim.start()
         }
     }
 
