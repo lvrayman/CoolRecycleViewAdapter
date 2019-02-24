@@ -55,6 +55,9 @@ class RefreshHeadView : LinearLayout {
             override fun onGlobalLayout() {
                 maxHeight = contentLayout.height.toFloat()
                 contentLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                val lp = contentLayout.layoutParams
+                lp.height = 0
+                contentLayout.layoutParams = lp
             }
         })
 
@@ -79,6 +82,7 @@ class RefreshHeadView : LinearLayout {
     }
 
     fun onRefreshing() {
+        Log.i("rayman", "onRefreshing()")
         mTv.text = context.getString(R.string.refreshing)
         mIvArrow.animation = null
         mIvArrow.visibility = View.GONE

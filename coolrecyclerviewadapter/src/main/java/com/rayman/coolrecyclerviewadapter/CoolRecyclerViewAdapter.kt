@@ -6,6 +6,7 @@ import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.ViewGroup
@@ -19,7 +20,7 @@ import com.rayman.coolrecyclerviewadapter.view.RefreshHeadView
  * @version 2018/12/20
  */
 abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layoutResource: Int) :
-        RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     var layoutManager: RecyclerView.LayoutManager? = null
     private var loadState = LOADING_FINISH
     private var isLoadMore = false
@@ -30,6 +31,7 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
     private var refreshHeadView: RefreshHeadView? = null
     private var refreshListener: (() -> Unit)? = null
     private var functionalHolderCount = 1
+    private var isTop = false
 
     fun onCreateViewHolder(parent: ViewGroup): DefaultViewHolder {
         val view = LayoutInflater.from(context).inflate(layoutResource, parent, false)
@@ -150,8 +152,6 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
 
     @SuppressLint("ClickableViewAccessibility")
     fun addLoadMoreListener(loadMore: () -> Unit) {
-        var startY = 0f
-        var offset = 0f
         functionalHolderCount = 2
         isLoadMore = true
         recyclerView?.addOnScrollListener(object : LoadMoreScrollListener() {
@@ -159,27 +159,6 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
                 loadMore()
             }
         })
-        recyclerView?.setOnTouchListener { v, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    startY = event.rawY
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    offset = (event.rawY - startY) / 2
-                    if (offset > 0 && isLoadMore && isOnTop()) {
-                        if (headViewHolder is IHeadRefreshHolder) {
-                            (headViewHolder as IHeadRefreshHolder).onMove(offset)
-                        }
-                    }
-                }
-                MotionEvent.ACTION_UP -> {
-                    if (headViewHolder is IHeadRefreshHolder) {
-                        (headViewHolder as IHeadRefreshHolder).onRelease()
-                    }
-                }
-            }
-            return@setOnTouchListener false
-        }
     }
 
     fun setOnRefreshingListener(listener: () -> Unit) {
@@ -199,43 +178,12 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
      * 添加修饰线，默认是水平方向的分割线
      */
     fun addItemDecoration(
-            itemDecoration: RecyclerView.ItemDecoration = DividerItemDecoration(
-                    context,
-                    DividerItemDecoration.VERTICAL
-            )
+        itemDecoration: RecyclerView.ItemDecoration = DividerItemDecoration(
+            context,
+            DividerItemDecoration.VERTICAL
+        )
     ) {
         recyclerView?.addItemDecoration(itemDecoration)
-    }
-
-    private abstract inner class LoadMoreScrollListener : RecyclerView.OnScrollListener() {
-        private var isSlidingUpward = false
-        override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-            super.onScrollStateChanged(recyclerView, newState)
-            val manager = recyclerView.layoutManager as LinearLayoutManager
-            // 当不滑动时
-            if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                //获取最后一个完全显示的itemPosition
-                val lastItemPosition = manager.findLastCompletelyVisibleItemPosition()
-                val itemCount = manager.itemCount
-                // 判断是否滑动到了最后一个item，并且是向上滑动
-                if (lastItemPosition == (itemCount - 1) && isSlidingUpward) {
-                    //加载更多
-                    val adapter = recyclerView.adapter
-                    if (adapter is CoolRecyclerViewAdapter<*>) {
-                        adapter.setLoadState(LOADING_START)
-                        recyclerView.scrollToPosition(adapter.itemCount - 1)
-                        loadMore()
-                    }
-                }
-            }
-        }
-
-        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-            super.onScrolled(recyclerView, dx, dy)
-            isSlidingUpward = dy > 0
-        }
-
-        abstract fun loadMore()
     }
 
     companion object {

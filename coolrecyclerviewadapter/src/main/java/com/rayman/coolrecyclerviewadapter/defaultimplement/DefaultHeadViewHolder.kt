@@ -3,6 +3,7 @@ package com.rayman.coolrecyclerviewadapter.defaultimplement
 import android.animation.Animator
 import android.animation.ValueAnimator
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.View
 import android.widget.TextView
 import com.rayman.coolrecyclerviewadapter.IHeadRefreshHolder
@@ -15,6 +16,7 @@ import com.rayman.coolrecyclerviewadapter.view.RefreshHeadView
  */
 class DefaultHeadViewHolder(private val view: View) : RecyclerView.ViewHolder(view), IHeadRefreshHolder {
     private val tv = view.findViewById<TextView>(R.id.tv_head)
+    private var height = 0f
     private var offset = 0f
     private var onRefreshingListener: (() -> Unit)? = null
     private var isPrepare = false
@@ -36,7 +38,18 @@ class DefaultHeadViewHolder(private val view: View) : RecyclerView.ViewHolder(vi
 
     override fun onMove(offset: Float) {
         if (view is RefreshHeadView) {
-            if (offset > view.maxHeight) {
+            if (height < view.maxHeight * 2) {
+                height = offset
+                Log.i("rayman", "height:$height")
+            }
+//            Log.i("rayman", "this.offset:${this.offset}")
+//            Log.i("rayman", "-----offset:$offset")
+            if (offset < this.offset) {
+                height -= (this.offset - offset) * 10
+                Log.i("rayman", "------------height:$height")
+            }
+            this.offset = offset
+            if (height > view.maxHeight) {
                 if (!isPrepare) {
                     isPrepare = true
                     onPrepare()
@@ -47,24 +60,20 @@ class DefaultHeadViewHolder(private val view: View) : RecyclerView.ViewHolder(vi
                     onUnprepare()
                 }
             }
-            if (offset > view.maxHeight * 2) {
-                return
-            }
-            this.offset = offset
             val lp = view.contentLayout.layoutParams
-            lp.height = offset.toInt()
+            lp.height = height.toInt()
             view.contentLayout.layoutParams = lp
         }
     }
 
     override fun onRelease() {
         if (view is RefreshHeadView) {
-            val targetHeight = if (offset > view.maxHeight) {
+            val targetHeight = if (height > view.maxHeight) {
                 view.maxHeight
             } else {
                 0f
             }
-            val anim = ValueAnimator.ofFloat(offset, targetHeight)
+            val anim = ValueAnimator.ofFloat(height, targetHeight)
             anim.duration = 250
             anim.addUpdateListener {
                 val value = it.animatedValue as Float
@@ -78,10 +87,11 @@ class DefaultHeadViewHolder(private val view: View) : RecyclerView.ViewHolder(vi
 
                 override fun onAnimationEnd(animation: Animator?) {
                     // 动画结束时开始刷新
-                    if (offset > view.maxHeight) {
+                    if (height > view.maxHeight) {
                         onRefreshingListener?.invoke()
                         view.onRefreshing()
                     }
+                    height = 0f
                 }
 
                 override fun onAnimationCancel(animation: Animator?) {
