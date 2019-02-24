@@ -3,11 +3,24 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="#24000000"
+    android:gravity="center"
     android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/iv_arrow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/ic_arrow_down" />
+
+    <ProgressBar
+        android:id="@+id/pb_refreshing"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/tv_head"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:padding="6dp"

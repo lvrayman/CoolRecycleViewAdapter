@@ -7,8 +7,8 @@ package com.rayman.coolrecyclerviewadapter
 interface IHeadRefreshHolder {
 
     fun onReset()
-
     fun onPrepare()
+    fun onUnprepare()
     fun onMove(offset: Float)
     fun onRelease()
     fun onRefreshFinish()

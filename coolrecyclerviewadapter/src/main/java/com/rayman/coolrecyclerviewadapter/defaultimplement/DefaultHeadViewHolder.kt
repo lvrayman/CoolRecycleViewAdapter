@@ -1,10 +1,8 @@
 package com.rayman.coolrecyclerviewadapter.defaultimplement
 
 import android.animation.Animator
-import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.View
 import android.widget.TextView
 import com.rayman.coolrecyclerviewadapter.IHeadRefreshHolder
@@ -16,13 +14,14 @@ import com.rayman.coolrecyclerviewadapter.view.RefreshHeadView
  * @version 2019/1/20
  */
 class DefaultHeadViewHolder(private val view: View) : RecyclerView.ViewHolder(view), IHeadRefreshHolder {
-
     private val tv = view.findViewById<TextView>(R.id.tv_head)
     private var offset = 0f
     private var onRefreshingListener: (() -> Unit)? = null
+    private var isPrepare = false
 
     override fun onReset() {
         if (view is RefreshHeadView) {
+            view.onReset()
             val lp = view.contentLayout.layoutParams
             val anim = ValueAnimator.ofInt(lp.height, 0)
             anim.duration = 250
@@ -36,10 +35,19 @@ class DefaultHeadViewHolder(private val view: View) : RecyclerView.ViewHolder(vi
     }
 
     override fun onMove(offset: Float) {
-        Log.i("rayman", "offset:$offset")
         if (view is RefreshHeadView) {
-            if (offset > view.maxHeight * 1.5) {
-                Log.i("rayman", "-----------------return-----------------")
+            if (offset > view.maxHeight) {
+                if (!isPrepare) {
+                    isPrepare = true
+                    onPrepare()
+                }
+            } else {
+                if (isPrepare) {
+                    isPrepare = false
+                    onUnprepare()
+                }
+            }
+            if (offset > view.maxHeight * 2) {
                 return
             }
             this.offset = offset
@@ -72,6 +80,7 @@ class DefaultHeadViewHolder(private val view: View) : RecyclerView.ViewHolder(vi
                     // 动画结束时开始刷新
                     if (offset > view.maxHeight) {
                         onRefreshingListener?.invoke()
+                        view.onRefreshing()
                     }
                 }
 
@@ -85,11 +94,26 @@ class DefaultHeadViewHolder(private val view: View) : RecyclerView.ViewHolder(vi
         }
     }
 
+    /**
+     * 已经准备完成，此时松开即可
+     */
     override fun onPrepare() {
+        if (view is RefreshHeadView) {
+            view.onPrepare()
+        }
+    }
 
+    /**
+     * 未准备完成，此时松开只是缩回去
+     */
+    override fun onUnprepare() {
+        if (view is RefreshHeadView) {
+            view.onUnprepare()
+        }
     }
 
     override fun onRefreshFinish() {
+
     }
 
     fun setRefreshingListener(listener: () -> Unit) {
