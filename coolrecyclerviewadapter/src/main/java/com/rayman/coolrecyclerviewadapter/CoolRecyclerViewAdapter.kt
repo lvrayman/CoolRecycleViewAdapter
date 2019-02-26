@@ -88,15 +88,16 @@ abstract class CoolRecyclerViewAdapter<T>(val context: Context, private val layo
         } else if (holder is IHeadRefreshHolder) {
 
         } else {
-            if (0 < position && position < data.size + 1) {
-                onBindData(data[position - 1], holder as DefaultViewHolder)
+            if (position < data.size + 1) {
+                Log.i("rayman", "position:$position")
+                onBindData(data[position], holder as DefaultViewHolder)
             }
         }
     }
 
     override fun getItemViewType(position: Int): Int {
         return when {
-            position == 0 -> TYPE_HEAD
+//            position == 0 -> TYPE_HEAD
             position + 1 == itemCount -> TYPE_LOADING
             else -> TYPE_ITEM
         }
